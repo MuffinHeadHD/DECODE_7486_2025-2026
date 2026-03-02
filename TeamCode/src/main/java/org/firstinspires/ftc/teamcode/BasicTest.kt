@@ -7,20 +7,20 @@ import org.firstinspires.ftc.teamcode.util.GamepadState
 
 @TeleOp(name = "BasicTest")
 class BasicTest : LinearOpMode() {
-    val robot = Robot(this)
+    lateinit var robot: Robot
 
     val gamepadState1: GamepadState = GamepadState()
     val gamepadState2: GamepadState = GamepadState()
 
     override fun runOpMode() {
+        robot = Robot(this)
+
         waitForStart()
 
         while(opModeIsActive()) {
-            robot.turret.update()
-
             robot.drive.drive(gamepad1.left_stick_x.toDouble(), -gamepad1.left_stick_y.toDouble(), gamepad1.right_stick_x.toDouble())
 
-            val intakeMode: IntakeMode = if (gamepad2.y) IntakeMode.OUT else if (gamepad2.b) IntakeMode.IN else IntakeMode.OFF
+            val intakeMode: IntakeMode = if (gamepad2.b) IntakeMode.OUT else if (gamepad2.y) IntakeMode.IN else IntakeMode.OFF
             robot.intake.set(intakeMode)
 
             if (gamepad2.left_bumper && !gamepadState2.left_bumper) {

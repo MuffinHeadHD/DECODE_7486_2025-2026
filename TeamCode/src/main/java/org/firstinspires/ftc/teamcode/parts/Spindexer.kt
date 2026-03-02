@@ -12,7 +12,7 @@ enum class LightColor(val index: Int) {
     GREEN(2)
 }
 
-class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val colorSensor: ColorSensor, val light: Light, val touchSensor: TouchSensor) {
+class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val colorSensor: ColorSensor, val light: Light, val touchSensor: TouchSensor): Updatable {
     private val inDist = 3.4
     private val outDist = 4.3
     private val inAlpha = 28
@@ -41,7 +41,7 @@ class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val co
 
     var lastTime = System.nanoTime()
 
-    fun update() {
+    override fun update() {
         val now = System.nanoTime()
         val dt = (now - lastTime) / 1e9
         lastTime = now
