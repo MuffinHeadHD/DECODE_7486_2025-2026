@@ -9,6 +9,7 @@ import kotlin.math.pow
 import kotlin.math.sign
 
 class AxonServo(val servo: CRServo, val analog: AnalogInput, val pid: PIDController = PIDController(1.0, 0.0, 0.0)): Updatable {
+    var targetSet = false
     var tolerance = 0.01
 
     // Holds the current position of the servo
@@ -23,14 +24,18 @@ class AxonServo(val servo: CRServo, val analog: AnalogInput, val pid: PIDControl
         }
 
     // Target position of the servo
-    var targetPosition: Double = 0.35
+    var targetPosition: Double = 0.0
         set(value) {
+            targetSet = true
             // Make sure the value is in range
             field = clamp(value, 0.0, 1.0)
         }
 
     // Set the power so it moves towards the target position
     override fun update() {
+        // Only start moving once the initial target is set
+        if (!targetSet) return
+
         val error = targetPosition - position
 
         if (abs(error) > tolerance) {
