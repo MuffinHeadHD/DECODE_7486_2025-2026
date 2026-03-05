@@ -16,12 +16,22 @@ enum class LightColor(val index: Int) {
 }
 
 @Config
-class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val colorSensor: ColorSensor, val light: Light, val touchSensor: TouchSensor): Updatable {
-    var kp = 0.4
-    var ki = 0.5
-    var kd = 0.1
-    private val pid: PIDValues = PIDValues(kp, ki, kd, 10.0)
+class SpindexerPID {
+    companion object {
+        @JvmField
+        var kp = 1.1
+        @JvmField
+        var ki = 0.075
+        @JvmField
+        var kd = 0.0
+        @JvmField
+        var ks = 0.035
+        @JvmField
+        var kv = 0.0
+    }
+}
 
+class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val colorSensor: ColorSensor, val light: Light, val touchSensor: TouchSensor): Updatable {
     private val prismColorsUs = intArrayOf(1050, 1200, 1350, 1500, 1650, 1800, 1940)
 
     private var ballPresent: Boolean = false
@@ -33,12 +43,14 @@ class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val co
 
     private var homePosition: Double = 0.0
 
-    init {
-        servo.pid.setValues(PIDValues(kp, ki, kd))
-    }
-
     override fun update() {
-        servo.pid.setValues(pid)
+        servo.pid.kp = SpindexerPID.kp
+        servo.pid.ki = SpindexerPID.ki
+        servo.pid.kd = SpindexerPID.kd
+        servo.pid.ks = SpindexerPID.ks
+        servo.pid.kv = SpindexerPID.kv
+
+        servo.update()
     }
 
     fun checkBall() {
@@ -72,17 +84,12 @@ class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val co
     }
 
     fun rotate(rotation: Int) {
-        servo.targetPosition = (servo.targetPosition + 1.0/3.0) % 1.0
+        val target = servo.targetPosition + (1.0/3.0 * rotation)
+        servo.targetPosition = (target % 1.0 + 1.0) % 1.0
     }
 
     fun home() {
-        servo.targetPosition = (servo.targetPosition + 1.0) % 1.0
-
-        while (!touchSensor.isPressed) {
-            continue
-        }
-
-        homePosition = servo.position
+        servo.targetPosition = 0.55
     }
 
     fun setLightColor(color: LightColor) {
