@@ -5,29 +5,36 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sign
 
-class PIDController(var kp: Double, var ki: Double, var kd: Double, var maxIntegralSum: Double = 0.25, var ks: Double = 0.06) {
+class PIDController(var kp: Double, var ki: Double, var kd: Double, var ks: Double = 0.0, var kv: Double = 0.0, var maxIntegralSum: Double = 0.25) {
     private var lastError = 0.0
     private var integralSum = 0.0
     private var timer = ElapsedTime()
     private var lastTime = 0.0
 
-    fun calculate(target: Double, current: Double): Double {
+    fun calculate(target: Double, current: Double, targetVelocity: Double = 0.0): Double {
         val currentTime = timer.seconds()
         val deltaTime = currentTime - lastTime
-
         val error = target - current
+
         val derivative = if (deltaTime > 0) (error - lastError) / deltaTime else 0.0
 
         integralSum += error * deltaTime
         integralSum = clamp(integralSum, -maxIntegralSum, maxIntegralSum)
 
+        val pidOutput = (kp * error) + (ki * integralSum) + (kd * derivative)
+
+        val staticFriction = sign(target - current) * ks
+        val velocityFF = targetVelocity * kv
+
+        val totalOutput = pidOutput + staticFriction + velocityFF
+
         lastError = error
         lastTime = currentTime
 
-        val output = (kp * error) + (ki * integralSum) + (kd * derivative)
-
-        return sign(output) * max(abs(output), ks)
+        return totalOutput
     }
+
+    fun calculate(error: Double): Double { return calculate(error, 0.0) }
 
     fun setValues(kp: Double, ki: Double, kd: Double, maxIntegralSum: Double = this.maxIntegralSum) {
         this.kp = kp
