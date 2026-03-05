@@ -5,12 +5,10 @@ import com.qualcomm.robotcore.hardware.AnalogInput
 import com.qualcomm.robotcore.hardware.CRServo
 import org.firstinspires.ftc.teamcode.PIDController
 import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sign
 
 class AxonServo(val servo: CRServo, val analog: AnalogInput, val pid: PIDController = PIDController(1.0, 0.0, 0.0)): Updatable {
     var targetSet = false
-    var tolerance = 0.01
+    var tolerance = 0.005
 
     // Holds the current position of the servo
     var position: Double
@@ -36,10 +34,13 @@ class AxonServo(val servo: CRServo, val analog: AnalogInput, val pid: PIDControl
         // Only start moving once the initial target is set
         if (!targetSet) return
 
-        val error = targetPosition - position
+        var error = targetPosition - position
+
+        if (error > 0.5) error -= 1.0
+        else if (error < -0.5) error += 1.0
 
         if (abs(error) > tolerance) {
-            val power = pid.calculate(targetPosition, position)
+            val power = pid.calculate(error)
             servo.power = -clamp(power, -1.0, 1.0)
         } else {
             servo.power = 0.0
