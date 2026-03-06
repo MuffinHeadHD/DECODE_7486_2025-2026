@@ -51,6 +51,8 @@ class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val co
         servo.pid.kv = SpindexerPID.kv
 
         servo.update()
+
+        checkBall()
     }
 
     fun checkBall() {
@@ -86,6 +88,15 @@ class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val co
     fun rotate(rotation: Int) {
         val target = servo.targetPosition + (1.0/3.0 * rotation)
         servo.targetPosition = (target % 1.0 + 1.0) % 1.0
+    }
+
+    fun setRotation(rotation: Int) {
+        val target = 1.0/3.0 * rotation
+        servo.targetPosition = (target % 1.0 + 1.0) % 1.0
+    }
+
+    fun isFinished(): Boolean {
+        return servo.servo.power == 0.0
     }
 
     fun home() {
