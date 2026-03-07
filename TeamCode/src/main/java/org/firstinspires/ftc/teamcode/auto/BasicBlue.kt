@@ -48,7 +48,7 @@ class BasicBlue: LinearOpMode() {
                 .splineTo(Vector2d(37.0, -30.0), Math.toRadians(-90.0))
                 .stopAndAdd(robot.SetIntakeIn())
                 .stopAndAdd(SleepAction(0.5))
-                .splineTo(Vector2d(37.0, -37.0), Math.toRadians(-90.0))
+                .splineTo(Vector2d(37.0, -37.0), Math.toRadians(-90.0), getVelocityConstraint(5.0))
                 .stopAndAdd(robot.SpindexerRotate(-1))
                 .splineTo(Vector2d(37.0, -41.0), Math.toRadians(-90.0))
                 .stopAndAdd(SleepAction(0.5))
