@@ -44,7 +44,7 @@ class Turret(val limelight: Limelight3A, val turretMotor: DcMotor, val flywheelM
     private var targetVel = 2200.0
     private val velSlew = 7000.0
     private val powerSlewPerSec = 5.0
-    private var flyPower = 0.0
+    var flyPower = 0.0
     private val maxVelEst = 4000.0
     private val kP_vel = 0.0003
 

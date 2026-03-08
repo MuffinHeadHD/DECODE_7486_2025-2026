@@ -17,7 +17,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.parts.AxonServo
 import org.firstinspires.ftc.teamcode.parts.Drive
 import org.firstinspires.ftc.teamcode.parts.Intake
-import org.firstinspires.ftc.teamcode.parts.Lift
 import org.firstinspires.ftc.teamcode.parts.Light
 import org.firstinspires.ftc.teamcode.parts.Spindexer
 import org.firstinspires.ftc.teamcode.parts.Turret
@@ -51,7 +50,6 @@ open class Robot(val opMode: OpMode) {
     lateinit var turret: Turret
     lateinit var spindexer: Spindexer
 
-    lateinit var lift: Lift
 
     lateinit var updateables: Array<Updatable>
 
@@ -136,6 +134,10 @@ open class Robot(val opMode: OpMode) {
 
     fun update() {
         updateables.forEach { it.update() }
+
+        dashboardTelemetry.addData("Flywheel Velocity", flywheelMotor.velocity)
+        dashboardTelemetry.addData("Flywheel Goal", turret.flyPower)
+        dashboardTelemetry.update()
     }
 
     fun updateGamepadStates(last: Boolean) {
