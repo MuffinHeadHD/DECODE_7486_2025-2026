@@ -67,8 +67,6 @@ class Turret(val limelight: Limelight3A, val turretMotor: DcMotor, val flywheelM
 
     private val MaxVoltage = 3.3
     private val MaxDistance_mm = 1000.0
-    private var launchDistVolts = launchDist.getVoltage()
-    private var distInLauncher = ((launchDistVolts /MaxVoltage) * MaxDistance_mm)
 
     private val distAlpha = 0.25
     private var lastDistSeenMs = System.currentTimeMillis()
@@ -128,6 +126,9 @@ class Turret(val limelight: Limelight3A, val turretMotor: DcMotor, val flywheelM
         lastTime = now
 
         val result = limelight.getLatestResult()
+
+        var launchDistVolts = launchDist.getVoltage()
+        var distInLauncher = ((launchDistVolts /MaxVoltage) * MaxDistance_mm)
 
         var hasTargetNow = false
         var txDeg = 0.0
@@ -221,16 +222,21 @@ class Turret(val limelight: Limelight3A, val turretMotor: DcMotor, val flywheelM
         val distPts = doubleArrayOf(80.0, 120.0, 160.0, 180.0, 200.0, 320.0)
         val velPts = doubleArrayOf(1690.0, 1870.6459, 1902.0, 2022.901, 2106.0, 2420.0)
 
-      if (distFresh) {
+    /*
+     if (distFresh) {
             val v = interp1D(distFiltCm, distPts, velPts)
             targetVelCmd = v.coerceIn(minVel, maxVel)
         }
+
+     */
 
 
 
         // ---------------------------------------------------------------------
 
-     /*   if (distFresh) {
+
+
+        if (distFresh) {
                 val v = interp1D(distFiltCm, distPts, velPts)
 
 
@@ -253,7 +259,7 @@ class Turret(val limelight: Limelight3A, val turretMotor: DcMotor, val flywheelM
                 spiking = false
             }
         }
-        */
+
 
         dashboardTelemetry.addData("dist volts", launchDistVolts)
         dashboardTelemetry.addData("Spiking", spiking)
