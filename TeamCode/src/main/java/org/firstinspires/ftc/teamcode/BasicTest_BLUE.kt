@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.teamcode.parts.IntakeMode
 
-@TeleOp(name = "GOOD_BLUE")
+@TeleOp(name = "Blue TeleOp", group = "Decode")
 class BasicTest_BLUE : LinearOpMode() {
     lateinit var robot: Robot
 

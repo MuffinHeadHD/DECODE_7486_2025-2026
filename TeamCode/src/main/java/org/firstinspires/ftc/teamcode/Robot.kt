@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
 import com.acmerobotics.dashboard.FtcDashboard
+import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.limelightvision.Limelight3A
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.AnalogInput
@@ -10,9 +11,12 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.DistanceSensor
+import com.qualcomm.robotcore.hardware.DigitalChannel
+import com.qualcomm.robotcore.hardware.DigitalChannel.*
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.hardware.TouchSensor
+import com.qualcomm.robotcore.hardware.VoltageSensor
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.parts.AxonServo
 import org.firstinspires.ftc.teamcode.parts.Drive
@@ -23,6 +27,16 @@ import org.firstinspires.ftc.teamcode.parts.Spindexer
 import org.firstinspires.ftc.teamcode.parts.Turret
 import org.firstinspires.ftc.teamcode.parts.Updatable
 import org.firstinspires.ftc.teamcode.util.GamepadState
+
+@Config
+class RobotConfig {
+
+    companion object{
+
+        @JvmField
+        var lightServoPosition = 0.52
+    }
+}
 
 open class Robot(val opMode: OpMode) {
     lateinit var lf: DcMotor
@@ -37,6 +51,10 @@ open class Robot(val opMode: OpMode) {
     lateinit var spindexerColor: ColorSensor
     lateinit var spindexerDistance: DistanceSensor
     lateinit var spindexerMagnet: TouchSensor
+    lateinit var launchDist: AnalogInput
+    lateinit var backlightR: Servo
+    lateinit var backlightL: Servo
+    lateinit var voltageSensor: VoltageSensor
 
     lateinit var turretMotor: DcMotor
     lateinit var limelight: Limelight3A
@@ -64,17 +82,24 @@ open class Robot(val opMode: OpMode) {
     lateinit var lastGamepadState2: GamepadState
 
     init {
-        val hardwareMap: HardwareMap = opMode.hardwareMap
+        val hwMap: HardwareMap = opMode.hardwareMap
 
-        limelight = hardwareMap.get(Limelight3A::class.java, "limelight")
+        launchDist = hwMap.get(AnalogInput::class.java, "launchDist")
+        limelight = hwMap.get(Limelight3A::class.java, "limelight")
         limelight.setPollRateHz(100)
         limelight.pipelineSwitch(0)
         limelight.start()
 
-        lf = hardwareMap.get(DcMotor::class.java, "lf")
-        lb = hardwareMap.get(DcMotor::class.java, "lb")
-        rf = hardwareMap.get(DcMotor::class.java, "rf")
-        rb = hardwareMap.get(DcMotor::class.java, "rb")
+        voltageSensor = opMode.hardwareMap.voltageSensor.iterator().next()
+
+
+        lf = hwMap.get(DcMotor::class.java, "lf")
+        lb = hwMap.get(DcMotor::class.java, "lb")
+        rf = hwMap.get(DcMotor::class.java, "rf")
+        rb = hwMap.get(DcMotor::class.java, "rb")
+
+        backlightL = hwMap.get(Servo::class.java, "backlightL")
+        backlightR = hwMap.get(Servo::class.java, "backlightR")
         driveMotors = arrayOf(lf, lb, rf, rb)
 
         for (motor in driveMotors) {
@@ -89,35 +114,34 @@ open class Robot(val opMode: OpMode) {
         rf.direction = Direction.REVERSE
         rb.direction = Direction.FORWARD
 
-        flywheelMotor = hardwareMap.get(DcMotorEx::class.java, "flywheel")
+        flywheelMotor = hwMap.get(DcMotorEx::class.java, "flywheel")
         flywheelMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         flywheelMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
-        intakeServo = hardwareMap.get(CRServo::class.java, "intk")
+        intakeServo = hwMap.get(CRServo::class.java, "intk")
 
         spindexerServo = AxonServo(
-            hardwareMap.get(CRServo::class.java, "spdx"),
-            hardwareMap.get(AnalogInput::class.java, "axen")
+            hwMap.get(CRServo::class.java, "spdx"),
+            hwMap.get(AnalogInput::class.java, "axen")
         )
-        spindexerColor = hardwareMap.get(ColorSensor::class.java, "css")
-        spindexerDistance = hardwareMap.get(DistanceSensor::class.java, "cs")
-        spindexerMagnet = hardwareMap.get(TouchSensor::class.java, "mag")
+        spindexerColor = hwMap.get(ColorSensor::class.java, "css")
+        spindexerDistance = hwMap.get(DistanceSensor::class.java, "cs")
+        spindexerMagnet = hwMap.get(TouchSensor::class.java, "mag")
 
-        turretMotor = hardwareMap.get(DcMotor::class.java, "tt")
+        turretMotor = hwMap.get(DcMotor::class.java, "tt")
         turretMotor.direction = Direction.REVERSE
         turretMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         turretMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
 
-        leftLiftServo = hardwareMap.get(CRServo::class.java, "leftLift")
-        rightLiftServo = hardwareMap.get(CRServo::class.java, "rightLift")
-        leftLiftServo.direction = Direction.FORWARD
-        rightLiftServo.direction = Direction.FORWARD
+//        leftLiftServo = hwMap.get(CRServo::class.java, "leftLift")
+//        rightLiftServo = hwMap.get(CRServo::class.java, "rightLift")
+//        leftLiftServo.direction = Direction.FORWARD
+//        rightLiftServo.direction = Direction.FORWARD
 
-        spindexerLight = Light(hardwareMap.get(Servo::class.java, "prism"))
+        spindexerLight = Light(hwMap.get(Servo::class.java, "prism"))
 
         drive = Drive(lf, lb, rf, rb)
         intake = Intake(intakeServo)
-        turret = Turret(limelight, turretMotor, flywheelMotor)
         spindexer = Spindexer(
             spindexerServo,
             spindexerDistance,
@@ -125,8 +149,10 @@ open class Robot(val opMode: OpMode) {
             spindexerLight,
             spindexerMagnet
         )
+        turret = Turret(limelight, turretMotor, flywheelMotor, launchDist, backlightR, backlightL, spindexer)
 
-        lift = Lift(hardwareMap.get(CRServo::class.java, "leftlift"), hardwareMap.get(CRServo::class.java, "rightlift"))
+        lift = Lift(hwMap.get(CRServo::class.java, "leftlift"), hwMap.get(CRServo::class.java, "rightlift"))
+
 
         updateables = arrayOf(spindexer, turret)
 
@@ -135,10 +161,26 @@ open class Robot(val opMode: OpMode) {
         gamepadState2 = GamepadState()
         lastGamepadState2 = GamepadState()
     }
-
+        var lastVoltage = 0.0
+        var voltageDropPerMin = 0.0
+        var lastVoltageTime = System.nanoTime()
     fun update() {
         updateables.forEach { it.update() }
 
+        val now = System.nanoTime()
+        val dt = (now - lastVoltageTime) / 1e9
+        lastVoltageTime = now
+
+        val voltage = voltageSensor.voltage
+
+        if (lastVoltage != 0.0 && dt > 0.0) {
+            voltageDropPerMin = (((lastVoltage - voltage) / dt) * 60.0)
+        }
+
+        lastVoltage = voltage
+
+        dashboardTelemetry.addData("voltage", voltage)
+        dashboardTelemetry.addData("Battery drain (volts per min)", voltageDropPerMin)
         dashboardTelemetry.addData("Flywheel Velocity", flywheelMotor.velocity)
         dashboardTelemetry.addData("Flywheel Goal", turret.flyPower)
         dashboardTelemetry.update()

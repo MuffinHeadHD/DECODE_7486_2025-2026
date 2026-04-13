@@ -19,7 +19,7 @@ enum class LightColor(val index: Int) {
 class SpindexerPID {
     companion object {
         @JvmField
-        var kp = 1.5
+        var kp = 1.5 // just in case i fuck smth up, the #s are 1.5,0.075,0.0,0.035,0.0
         @JvmField
         var ki = 0.075
         @JvmField
@@ -28,6 +28,8 @@ class SpindexerPID {
         var ks = 0.035
         @JvmField
         var kv = 0.0
+        @JvmField
+        var lastSpinTime = 5000L
     }
 }
 
@@ -38,6 +40,7 @@ class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val co
     private val inDistance: Double = 3.4
     private val outDistance: Double = 4.3
     private val inAlpha: Int = 28
+    public var lastRotateTimeMs = 0L
     private val outAlpha: Int = 18
     private var hueFilt = 0f
 
@@ -88,11 +91,16 @@ class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val co
     fun rotate(rotation: Int) {
         val target = servo.targetPosition + (1.0/3.0 * rotation)
         servo.targetPosition = (target % 1.0 + 1.0) % 1.0
+        lastRotateTimeMs = System.currentTimeMillis()
     }
 
     fun setRotation(rotation: Int) {
         val target = 1.0/3.0 * rotation
         servo.targetPosition = (target % 1.0 + 1.0) % 1.0
+        lastRotateTimeMs = System.currentTimeMillis()
+    }
+    fun wasRecentlyRotated(windowMs: Long = SpindexerPID.lastSpinTime): Boolean {
+        return System.currentTimeMillis() - lastRotateTimeMs < windowMs
     }
 
     fun isFinished(): Boolean {
@@ -101,6 +109,7 @@ class Spindexer(val servo: AxonServo, val distanceSensor: DistanceSensor, val co
 
     fun home() {
         servo.targetPosition = homePosition
+        lastRotateTimeMs = System.currentTimeMillis()
     }
 
     fun setLightColor(color: LightColor) {

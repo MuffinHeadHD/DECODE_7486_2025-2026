@@ -10,11 +10,12 @@ import com.acmerobotics.roadrunner.ftc.runBlocking
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.AutonomousRobot
+import org.firstinspires.ftc.teamcode.parts.TurretConfig
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive
 import kotlin.math.PI
 import kotlin.math.tan
 
-@Autonomous(name = "BasicBlueFar")
+@Autonomous(name = "Blue Far - 6 Artifacts")
 class BasicBlue : LinearOpMode() {
     lateinit var robot: AutonomousRobot
     val initialPose = Pose2d(64.0, -15.0, Math.toRadians(180.0))
@@ -27,7 +28,7 @@ class BasicBlue : LinearOpMode() {
         fun setPipeline(index: Int) {
             robot.turret.limelight.pipelineSwitch(index)
             robot.turret.limelight.start()
-            sleep(700) // give pipeline more time to settle
+            sleep(700)
         }
 
         robot.turret.startLimelight()
@@ -39,7 +40,6 @@ class BasicBlue : LinearOpMode() {
         var stable = 0
 
         while (!isStarted && !isStopRequested) {
-            robot.update()
 
             val result = robot.turret.limelight.getLatestResult()
             val fid = result?.fiducialResults ?: emptyList()
@@ -66,11 +66,9 @@ class BasicBlue : LinearOpMode() {
 
         robot.spindexer.home()
 
-        // switch to goal pipeline
         robot.turret.aimTagId = null
         setPipeline(0)
 
-        // debug goal detection BEFORE enabling aim
         var seenGoalStable = 0
         var sawGoalEver = false
         val acquireStart = System.currentTimeMillis()
@@ -110,16 +108,15 @@ class BasicBlue : LinearOpMode() {
             if (seenGoalStable >= 2) break
         }
 
-        // only enable auto-aim after confirming tag is actually visible
-        robot.turret.aimTagId = 20
+        robot.turret.aimTagId = 24
 
-        fun cw() = SequentialAction(robot.SpindexerRotate(+1), SleepAction(1.5))
-        fun ccw() = SequentialAction(robot.SpindexerRotate(-1), SleepAction(1.5))
+        fun cw() = SequentialAction(robot.SpindexerRotate(+1), SleepAction(1.35))
+        fun ccw() = SequentialAction(robot.SpindexerRotate(-1), SleepAction(1.35))
 
         fun makeLaunchAll() = RaceAction(
             robot.Update(),
             SequentialAction(
-                SleepAction(3.0),
+                SleepAction(2.5),
                 when (motifTag) {
                     22 -> SequentialAction(cw(), cw(), cw())
                     21 -> SequentialAction(ccw(), ccw(), cw(), cw(), cw())
@@ -129,39 +126,41 @@ class BasicBlue : LinearOpMode() {
             )
         )
 
+        val oldDelta1 = TurretConfig.flywheelVelocityDelta
+        TurretConfig.flywheelVelocityDelta = oldDelta1 + 0.1
         runBlocking(makeLaunchAll())
-
+        TurretConfig.flywheelVelocityDelta = oldDelta1
         val action = RaceAction(
             robot.Update(),
             drive.actionBuilder(initialPose)
                 .stopAndAdd(
                     SequentialAction(
                         InstantAction { robot.turret.aimTagId = null },
-                        InstantAction { robot.turret.home() },
+                        InstantAction { robot.turret.homeBiased(15) },
                         SleepAction(0.2)
                     )
                 )
                 .stopAndAdd(robot.SetIntakeIn())
                 .splineTo(Vector2d(37.0, -30.0), Math.toRadians(-90.0))
                 .turnTo(Math.toRadians(-90.0))
-                .stopAndAdd(SleepAction(0.5))
+                .stopAndAdd(SleepAction(0.4))
                 .splineTo(Vector2d(37.0, -37.0), Math.toRadians(-90.0))
                 .turnTo(Math.toRadians(-90.0))
                 .stopAndAdd(robot.SpindexerRotate(-1))
                 .stopAndAdd(SleepAction(0.35))
                 .splineTo(Vector2d(37.0, -41.0), Math.toRadians(-90.0))
                 .turnTo(Math.toRadians(-90.0))
-                .stopAndAdd(SleepAction(0.5))
+                .stopAndAdd(SleepAction(0.4))
                 .stopAndAdd(robot.SpindexerRotate(-1))
                 .stopAndAdd(SleepAction(0.35))
                 .splineTo(Vector2d(37.0, -44.0), Math.toRadians(-90.0))
                 .turnTo(Math.toRadians(-90.0))
-                .stopAndAdd(SleepAction(0.5))
+                .stopAndAdd(SleepAction(0.4))
                 .splineToLinearHeading(initialPose, PI / 2)
                 .stopAndAdd(
                     SequentialAction(
                         InstantAction { robot.turret.aimTagId = null },
-                        InstantAction { robot.turret.home() },
+                        InstantAction { robot.turret.homeBiased(15) },
                         SleepAction(0.2)
                     )
                 )
@@ -170,7 +169,12 @@ class BasicBlue : LinearOpMode() {
         )
 
         runBlocking(action)
+
+        val oldDelta2 = TurretConfig.flywheelVelocityDelta
+        TurretConfig.flywheelVelocityDelta = oldDelta2
         runBlocking(makeLaunchAll())
+        TurretConfig.flywheelVelocityDelta = oldDelta2
+
         runBlocking(
             RaceAction(
                 robot.Update(),
