@@ -27,7 +27,7 @@ class TurretConfig {
         @JvmField
         var spikeDurationMs = 500L // time 1000 = 1 sec
         @JvmField
-        var spikeTriggerVolts = 0.20 // idk what this even means anymore, i'm just guessing and hoping it works
+        var spikeTriggerVolts = 0.20 // idk what this even means anymore, I'm just guessing and hoping it works
 
         @JvmField
         var  FlywheelLowVoltageAdditive  /* Power */ = 0.0 // this adds velocity when voltage is low (manually)
