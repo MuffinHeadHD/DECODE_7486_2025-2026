@@ -19,7 +19,7 @@ enum class LightColor(val index: Int) {
 class SpindexerPID {
     companion object {
         @JvmField
-        var kp = 1.5 // just in case i fuck smth up, the #s are 1.5,0.075,0.0,0.035,0.0
+        var kp = 1.5 // just in case I fuck smth up, the #s are 1.5, 0.075, 0.0, 0.035, 0.0
         @JvmField
         var ki = 0.075
         @JvmField
