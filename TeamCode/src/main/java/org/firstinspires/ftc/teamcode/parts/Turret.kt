@@ -31,6 +31,8 @@ class TurretConfig {
 
         @JvmField
         var  FlywheelLowVoltageAdditive  /* Power */ = 0.0 // this adds velocity when voltage is low (manually)
+        @JvmField
+        var ManualSpikeBlock = false
 
     }
 }
@@ -230,7 +232,7 @@ class Turret(val limelight: Limelight3A, val turretMotor: DcMotor, val flywheelM
             val v = interp1D(distFiltCm, distPts, velPts)
 
 
-            if ((launchDistVolts < TurretConfig.spikeTriggerVolts) && !spiking && spindexer.wasRecentlyRotated()) {
+            if ((launchDistVolts < TurretConfig.spikeTriggerVolts) && !spiking && spindexer.wasRecentlyRotated() && TurretConfig.ManualSpikeBlock) {
                 spiking = true
                 spikeStartTime = System.currentTimeMillis()
             }
